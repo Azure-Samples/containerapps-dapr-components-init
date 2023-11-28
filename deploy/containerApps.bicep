@@ -21,7 +21,7 @@ resource orderPublisher 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: 'daprms.azurecr.io/public/daprio/samples/azcli-capps/python-order-publisher:latest'
+          image: 'mcr.microsoft.com/daprio/samples/azcli-capps/python-order-publisher:latest'
           name: 'order-publisher'
           env: [
             {
@@ -60,7 +60,7 @@ resource orderProcessor 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: 'daprms.azurecr.io/public/daprio/samples/azcli-capps/python-order-processor:latest'
+          image: 'mcr.microsoft.com/daprio/samples/azcli-capps/python-order-processor:latest'
           name: 'order-processor'
           env: [
             {
