@@ -1,57 +1,63 @@
-# Project Name
+# Dapr on Azure Container Apps sample
 
-(short, 1-3 sentenced, description of the project)
+## Running locally
+```bash
+# Start the order processor service
+cd order-processor
+export DAPR_STATESTORE_COMPONENT=statestore
+export DAPR_PUBSUB_COMPONENT=pubsub
+dapr run --app-id order-processor --app-port 6001 -- python3 app.py
 
-## Features
+# In a separate terminal, start the order publisher service
+cd order-publisher
+export DAPR_PUBSUB_COMPONENT=pubsub
+dapr run --app-id order-publisher -- python3 app.py
+```
 
-This project framework provides the following features:
+## Running on ACA
 
-* Feature 1
-* Feature 2
-* ...
+### Pre-requisites (optional)
 
-## Getting Started
+The images are already present in Microsoft Container Registry, if you are building custom images, you can use the following commands to build and push the images to your own container registry.
 
-### Prerequisites
+```bash
+docker buildx build --platform linux/amd64 -t $MY_CONTAINER_REGISTRY/python-order-publisher:latest --push ./order-publisher
+docker buildx build --platform linux/amd64 -t $MY_CONTAINER_REGISTRY/python-order-processor:latest --push ./order-processor
+```
 
-(ideally very short, if any)
+## Deploying container app environment and apps
 
-- OS
-- Library version
-- ...
+```bash
+VAR_RESOURCE_GROUP="myResourceGroup"
+VAR_ENVIRONMENT="myAcaEnv"
+VAR_LOCATION="eastus"
 
-### Installation
+## Create the resource group
+az group create \
+  --name "$VAR_RESOURCE_GROUP" \
+  --location "$VAR_LOCATION"
 
-(ideally very short)
+## Create the managed environment
+az deployment group create \
+  --resource-group "$VAR_RESOURCE_GROUP" \
+  --template-file ./deploy/managedEnvironment.bicep \
+  --parameters environment_name="$VAR_ENVIRONMENT" \
+  --parameters location="$VAR_LOCATION"
 
-- npm install [package name]
-- mvn install
-- ...
+## Initialize Dapr components
+az containerapp env dapr-component init -g $VAR_RESOURCE_GROUP --name $VAR_ENVIRONMENT 
 
-### Quickstart
-(Add steps to get up and running quickly)
+## Deploy the container apps
+az deployment group create \
+  --resource-group "$VAR_RESOURCE_GROUP" \
+  --template-file ./deploy/containerApps.bicep \
+  --parameters environment_name="$VAR_ENVIRONMENT" \
+  --parameters location="$VAR_LOCATION"
+```
 
-1. git clone [repository clone url]
-2. cd [repository name]
-3. ...
+## Cleanup
 
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
-
-## Resources
-
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+```bash
+# Delete the resource group
+az group delete --name "$VAR_RESOURCE_GROUP"
+```
